@@ -24,7 +24,7 @@ class ChatViewController: UIViewController {
     var messages: [PFObject] = []
     
     // ––––– LAB 5 TODO: CREATE CHAT MESSAGE OBJECT
-    let chatMessage = PFObject(className: "Message")
+   
 
     
     override func viewDidLoad() {
@@ -37,60 +37,59 @@ class ChatViewController: UIViewController {
         tableView.estimatedRowHeight = 50
         
         
-        // Reload messages every second (interval of 1 second)
-        Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.retrieveChatMessages), userInfo: nil, repeats: true)
+        // Lab 5 TODO: Reload messages every second (interval of 1 second)
+        onTimer()
         tableView.reloadData()
     }
+    
+        @objc func onTimer() {
+            retrieveChatMessages()
+            Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.onTimer), userInfo: nil, repeats: true)
+        }
+    
     
     
     
     /*------  Message Functionality ------*/
     
-    // ––––– Lab 5 TODO: ADD FUNCTIONALITY TO retrieveChatMessages()
+    // ––––– ADD FUNCTIONALITY TO retrieveChatMessages()
     @objc func retrieveChatMessages() {
-        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
-        let query = PFQuery(className: "TrainingFall2020") // className = group chat name, obtained from Constants.swift
+        let query = PFQuery(className: "iOS_Spring2021")
         query.addDescendingOrder("createdAt")
         query.limit = 20
         query.includeKey("user")
-        query.findObjectsInBackground { (messages, error) in
+        query.findObjectsInBackground{(messages, error) in
             if let messages = messages {
                 self.messages = messages
                 self.tableView.reloadData()
-            }
-            else {
-                print(error!.localizedDescription)
+            } else {
+                print(error?.localizedDescription)
             }
         }
     }
     
     
-    //  ––––– Lab 5 TODO: SEND MESSAGE TO SERVER AFTER onSend IS CLICKED
+    //  ––––– LAB 5 TODO: SEND MESSAGE TO SERVER AFTER onSend IS CLICKED
     @IBAction func onSend(_ sender: Any) {
-        // ParseClass.TrainingFall2020 is a string from our Constants.swift file
-        if messageTextField.text!.isEmpty == false {
-            let chatMessage = PFObject(className: "TrainingFall2020") // className = group chat, Obtained from Constants.swift
-            chatMessage["text"] = messageTextField.text ?? ""
-            chatMessage["user"] = PFUser.current()
-            self.messageTextField.text = "" // reset message
-            chatMessage.saveInBackground { (success, error) in
-                if success {
-                    print("The message was saved!")
-                    
-                } else if let error = error {
-                    print("Problem saving message: \(error.localizedDescription)")
-                }
+        let chatMessage = PFObject(className: "iOS_Spring2021")
+        chatMessage["text"] = messageTextField.text ?? ""
+        chatMessage["user"] = PFUser.current() ?? ""
+        chatMessage.saveInBackground{(success, error) in
+            if success {
+                print("The message was saved")
+                self.messageTextField.text = ""
+            } else if let error = error {
+                print("problem saving message: \(error.localizedDescription)")
             }
-        } else {
-            print("\nMessage cannot be empty\n")
         }
     }
     
     
     
-    //  ––––– Lab 5 TODO: Logout
+    //  ––––– LAB 5 TODO: Logout
     @IBAction func onLogout(_ sender: Any) {
-        NotificationCenter.default.post(name: NSNotification.Name("didLogout"), object: nil)
+        PFUser.logOutInBackground()
+        NotificationCenter.default.post(name: NSNotification.Name("logOut"), object: nil)
     }
     
     
@@ -110,6 +109,7 @@ extension ChatViewController: UITableViewDelegate, UITableViewDataSource {
     
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        // NOTE: Don't worry about the error, please follow the lab!
         return messages.count
     }
     
@@ -119,6 +119,7 @@ extension ChatViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ChatCell", for: indexPath) as! ChatCell
         
+        // NOTE: Please follow the lab before asking for help :)
         let message = messages[indexPath.row]
         cell.messageLabel.text = message["text"] as? String
         
